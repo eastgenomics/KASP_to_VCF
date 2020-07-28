@@ -26,7 +26,7 @@ class Vcf(object):
     def __init__(self, sample):
         self.fileformat =  "VCFv4.2"
         self.sample     = sample
-        self.source     = "KASP_GEL_WGS_v0.1"
+        self.source     = "KASP_to_VCF_v1.0"
         self.reference  = "http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa"
         self.contigs    = self._get_SNP_contigs()
         self.filter     = ['ID=PASS,Description="All filters passed"']
@@ -244,7 +244,6 @@ def get_data_dict(csv_reader):
         if row[0] in sections:
             section = row[0]
             section_column_headers = []
-            #print("Getting '%s' section..." % section)
             continue
 
         # Skip header
@@ -291,10 +290,9 @@ def check_reference_genome():
         print("http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa")
         print("\n2. Save to:")
         print(reference_genome_fa_filepath)
-        print("\n3. Try again\n")
+        print("\n3. Run again\n")
 
     # Check reference genome integrity
-    print("Calc md5...")
     with open(reference_genome_fa_filepath, "rb") as f:
         md5 = hashlib.md5()
         while True:
@@ -310,7 +308,6 @@ def check_reference_genome():
 def main(csv_filepath):
 
     check_reference_genome()
-    exit()
     
     project_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     target_snp_filepath = os.path.join(project_dir, "data/SNPs/GRCh38_coords_ref_alt_min_chr")
