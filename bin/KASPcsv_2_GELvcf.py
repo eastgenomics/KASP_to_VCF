@@ -307,6 +307,7 @@ def check_reference_genome():
 
 def main(csv_filepath):
 
+    print("Checking reference genome integrity")
     check_reference_genome()
     
     project_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -322,7 +323,7 @@ def main(csv_filepath):
             if not SNP(rsid) in snps:
                 snps.append(SNP(rsid, chrom, pos, ref, alt))
 
-
+    print("Checking reference genome integrity")
     # Now we process the KASP data
     with open(csv_filepath) as csv_fh:
         csv_reader = csv.reader(csv_fh)
