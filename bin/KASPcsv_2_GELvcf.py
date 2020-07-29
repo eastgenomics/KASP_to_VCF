@@ -1,7 +1,7 @@
 """
-To convert SNP genotypes in KASP csv format into vcf format as specified by GEL.
+To convert SNP genotypes in KASP csv format into vcf format as specified by GEL
 
-See docs/SNP_Spec_for_Positive_Sample_Identification_v1.0.docx 
+See docs/SNP_Spec_for_Positive_Sample_Identification_v1.0.docx
 for details of vcf format
 
 Matt Garner 190621
@@ -40,17 +40,17 @@ class Vcf(object):
 
     def _get_SNP_contigs(self):
         snp_contig_ids = set([snp.chrom for snp in self.sample.snps])
-        
+
         # Won't work if we have non-integer chroms, ok for GEL 24
         snp_contig_ids = sorted(snp_contig_ids, key=lambda x: int(x[3:]))
-        
+
         ref_contigs = []
         with open("/mnt/storage/projects/GEL_WGS_SNP_genotyping/data/genome/GRCh38_full_analysis_set_plus_decoy_hla.contignames.fa") as fh:
             for line in fh:
                 if line.startswith(">"):
                     ref_contigs.append(line.strip()[1:])
-        
-        ref_contig_ids = {ref_contig.split(" ")[0]:ref_contig for ref_contig in ref_contigs}
+
+        ref_contig_ids = {ref_contig.split(" ")[0]: ref_contig for ref_contig in ref_contigs}
         
         vcf_contigs = []
         for ref_contig_id in ref_contig_ids:
@@ -80,7 +80,7 @@ class Vcf(object):
         # Contigs are pulled from reference file
         for contig in self.contigs:
             formatted_contig = self._format_contig(contig)
-            header_lines.append("##contig=<%s>\n" % formatted_contig )            
+            header_lines.append("##contig=<%s>\n" % formatted_contig)            
 
         header_lines.append("#"+"\t".join(self.column_headers)+"\n")
 
@@ -101,13 +101,13 @@ class Vcf(object):
             kvps[key] = value
             key_order.append(key)
 
-        first=True
+        first = True
         for key in key_order:
             str_to_append = "%s=%s" % (key, kvps[key])
             if not first:
-                str_to_append = ","+str_to_append
-            first=False
-            contig_string+=str_to_append
+                str_to_append = "," + str_to_append
+            first = False
+            contig_string += str_to_append
 
         return contig_string
 
@@ -150,16 +150,17 @@ class SNP(object):
         return hash((self.rsid))
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)): return NotImplemented
+        if not isinstance(other, type(self)):
+            return NotImplemented
         return self.rsid == other.rsid
 
     def set_genotype(self, call):
 
-        mapping = {"A":"T",
-                   "T":"A",
-                   "G":"C",
-                   "C":"G",
-                   "?":"?"}
+        mapping = {"A": "T",
+                   "T": "A",
+                   "G": "C",
+                   "C": "G",
+                   "?": "?"}
 
         self.alleles = call.split(":")
         self.alleles_strand = 1
@@ -176,7 +177,7 @@ class SNP(object):
             alleles_strand = 1
 
         # Sort alleles into ref, alt
-        sort_order = {self.ref:0,self.alt:1,"?":2}
+        sort_order = {self.ref: 0, self.alt: 1, "?": 2}
         self.alleles = sorted(self.alleles, key=lambda x: sort_order[x])
 
         # Now record ref as 0, alt as 1, no call as .
@@ -186,7 +187,7 @@ class SNP(object):
             elif allele == self.alt:
                 self.GT.append("1")
             elif allele == "?":
-                self.GT.extend([".","."])
+                self.GT.extend([".", "."])
 
     def set_vcf_record(self):
         vcf_record = "\t".join([self.chrom, self.pos, self.rsid, self.ref, self.alt, self.qual, self.filter, self.info, self.format, "/".join(self.GT)])
@@ -233,11 +234,13 @@ class Sample(object):
 
 def get_data_dict(csv_reader):
     section = None                          # Header is always the first section
-    sections = ["Statistics","SNPs","Data"] # These sections follow the header
+    sections = ["Statistics", "SNPs", "Data"] # These sections follow the header
 
-    data = {s:[] for s in sections} # We will extract the data into this dict
+    data = {s: [] for s in sections} # We will extract the data into this dict
 
-    section_column_headers = [] # Each section has different column headers. The headers for the current section are stored here
+    # Each section has different column headers. 
+    # The headers for the current section are stored here
+    section_column_headers = [] 
 
     for row in csv_reader:
 
@@ -320,7 +323,8 @@ def main(csv_filepath):
     samples = []
     snps = []
 
-    # These SNPs act as a template for the genotyped SNPs associated with each Sample
+    # These SNPs act as a template for the genotyped SNPs associated with each 
+    # Sample
     with open(target_snp_filepath) as tgt_snps_fh:
         for line in tgt_snps_fh:
             fields = line.strip().split("\t")
