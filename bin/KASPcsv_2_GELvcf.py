@@ -1,6 +1,8 @@
 """
 To convert SNP genotypes in KASP csv format into vcf format as specified by GEL.
-See docs/SNP_Spec_for_Positive_Sample_Identification_v1.0.docx for details of vcf format
+
+See docs/SNP_Spec_for_Positive_Sample_Identification_v1.0.docx 
+for details of vcf format
 
 Matt Garner 190621
 matthew.garner@addenbrookes.nhs.uk
@@ -15,6 +17,7 @@ from datetime import datetime
 import sys
 import hashlib
 import urllib.request
+
 
 def QC():
     # TO DO
@@ -31,13 +34,15 @@ class Vcf(object):
         self.contigs    = self._get_SNP_contigs()
         self.filter     = ['ID=PASS,Description="All filters passed"']
         self.format     = ['ID=GT,Number=1,Type=String,Description="Genotype"']
-        self.column_headers = ["CHROM","POS","ID","REF","ALT","QUAL","FILTER","INFO","FORMAT",self.sample.sample_id]
+        self.column_headers = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", self.sample.sample_id]
         self.header     = self._build_header()
         self.sample.sort_snps()
 
     def _get_SNP_contigs(self):
         snp_contig_ids = set([snp.chrom for snp in self.sample.snps])
-        snp_contig_ids = sorted(snp_contig_ids, key=lambda x: int(x[3:]))   # Won't work if we have non-integer chroms, ok for GEL 24
+        
+        # Won't work if we have non-integer chroms, ok for GEL 24
+        snp_contig_ids = sorted(snp_contig_ids, key=lambda x: int(x[3:]))
         
         ref_contigs = []
         with open("/mnt/storage/projects/GEL_WGS_SNP_genotyping/data/genome/GRCh38_full_analysis_set_plus_decoy_hla.contignames.fa") as fh:
@@ -62,13 +67,13 @@ class Vcf(object):
                      "source": self.source,
                      "reference": self.reference,
                      }
-        
+
         header_order = ["fileformat",
                         "fileDate",
                         "source",
                         "reference",
                         ]
-        
+
         for header_field in header_order:
             header_lines.append("##%s=%s\n" % (header_field, header_kvps[header_field]))
 
@@ -78,17 +83,17 @@ class Vcf(object):
             header_lines.append("##contig=<%s>\n" % formatted_contig )            
 
         header_lines.append("#"+"\t".join(self.column_headers)+"\n")
-      
+
         self.header_lines = header_lines
 
     def _format_contig(self, contig):
         contig_string = ""
-        
+
         fields = contig.strip().split("  ")
         contig_id = fields[0]
-        
+
         kvps = {"ID": contig_id}
-        
+
         key_order = ["ID"]
 
         for field in fields[1:]:
@@ -120,11 +125,11 @@ class Vcf(object):
 
         # To safeguard against partial vcfs
         os.rename(temp_out_file, output_filepath)
-        
+
     def _get_datetime(self):
         return datetime.today().strftime('%Y%m%d')
 
-   
+
 class SNP(object):
 
     def __init__(self, rsid, chrom=None, pos=-1, ref=None, alt=None, filter="PASS", qual="1", info="."):
@@ -169,7 +174,7 @@ class SNP(object):
         if self.alleles_strand == 0:
             self.alleles = [mapping[allele] for allele in self.alleles]
             alleles_strand = 1
-       
+
         # Sort alleles into ref, alt
         sort_order = {self.ref:0,self.alt:1,"?":2}
         self.alleles = sorted(self.alleles, key=lambda x: sort_order[x])
@@ -233,9 +238,9 @@ def get_data_dict(csv_reader):
     data = {s:[] for s in sections} # We will extract the data into this dict
 
     section_column_headers = [] # Each section has different column headers. The headers for the current section are stored here
-        
+
     for row in csv_reader:
-        
+
         # Skip empty rows
         if not any(row):
             continue
@@ -282,7 +287,7 @@ def get_snp(rsid, snps):
 def check_reference_genome():
     project_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     reference_genome_fa_filepath = os.path.join(project_dir, "data/genome/GRCh38_full_analysis_set_plus_decoy_hla.fa")
-    
+
     # Download the file if it doesn't exist already. Too big for github.
     if not os.path.exists(reference_genome_fa_filepath):
         print("Error: Reference genome missing")
@@ -300,16 +305,16 @@ def check_reference_genome():
             if not data:
                 break
             md5.update(data)
-    
+
         md5sum = md5.hexdigest()
         assert md5sum == "64b32de2fc934679c16e83a2bc072064", "Reference genome md5 incorrect. Aborting"
 
 
 def main(csv_filepath):
 
-    print("Checking reference genome integrity")
+    print("Checking reference genome integrity...")
     check_reference_genome()
-    
+
     project_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     target_snp_filepath = os.path.join(project_dir, "data/SNPs/GRCh38_coords_ref_alt_min_chr")
     samples = []
@@ -323,7 +328,7 @@ def main(csv_filepath):
             if not SNP(rsid) in snps:
                 snps.append(SNP(rsid, chrom, pos, ref, alt))
 
-    print("Checking reference genome integrity")
+    print("Extracting SNP data...")
     # Now we process the KASP data
     with open(csv_filepath) as csv_fh:
         csv_reader = csv.reader(csv_fh)
@@ -340,7 +345,7 @@ def main(csv_filepath):
             # Make a new Sample if this is a new sample_id
             if not Sample(sample_id) in samples:
                 samples.append(Sample(sample_id))
-            
+
             # Get the sample object for this sample
             sample = get_sample(sample_id, samples)
 
@@ -348,7 +353,7 @@ def main(csv_filepath):
             rsid = entry["SNPID"]
             call = entry["Call"]
             snp = copy.deepcopy(get_snp(rsid, snps))
-            
+
             # Add genotype info to the SNP
             snp.set_genotype(call)
 
@@ -362,7 +367,7 @@ def main(csv_filepath):
         if os.path.exists(output_filepath):
             print("{output_filepath} already exists, skipping".format(output_filepath=output_filepath))
             continue
-        
+
         sample.generate_vcf()
         sample.vcf.write(output_filepath)
 
