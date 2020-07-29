@@ -27,7 +27,7 @@ def QC():
 class Vcf(object):
 
     def __init__(self, sample):
-        self.fileformat =  "VCFv4.2"
+        self.fileformat = "VCFv4.2"
         self.sample     = sample
         self.source     = "KASP_to_VCF_v1.0"
         self.reference  = "http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa"
@@ -51,22 +51,22 @@ class Vcf(object):
                     ref_contigs.append(line.strip()[1:])
 
         ref_contig_ids = {ref_contig.split(" ")[0]: ref_contig for ref_contig in ref_contigs}
-        
+
         vcf_contigs = []
         for ref_contig_id in ref_contig_ids:
             if ref_contig_id in snp_contig_ids:
                 vcf_contigs.append(ref_contig_ids[ref_contig_id])
-        
+
         return sorted(vcf_contigs, key=lambda x: int(x.split("  ")[0][3:]))
 
     def _build_header(self):
         header_lines = []
 
-        header_kvps={"fileformat":self.fileformat,
-                     "fileDate": self._get_datetime(),
-                     "source": self.source,
-                     "reference": self.reference,
-                     }
+        header_kvps = {"fileformat": self.fileformat,
+                      "fileDate": self._get_datetime(),
+                      "source": self.source,
+                      "reference": self.reference,
+                      }
 
         header_order = ["fileformat",
                         "fileDate",
@@ -80,7 +80,7 @@ class Vcf(object):
         # Contigs are pulled from reference file
         for contig in self.contigs:
             formatted_contig = self._format_contig(contig)
-            header_lines.append("##contig=<%s>\n" % formatted_contig)            
+            header_lines.append("##contig=<%s>\n" % formatted_contig)
 
         header_lines.append("#"+"\t".join(self.column_headers)+"\n")
 
@@ -201,7 +201,6 @@ class Sample(object):
     Sample(sample_id)
     """
 
-
     def __init__(self, sample_id):
         self.sample_id = sample_id
         assert sample_id.startswith("GM"), "sample_ids should start with 'GM'"
@@ -217,7 +216,8 @@ class Sample(object):
         return hash((self.sample_id))
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)): return NotImplemented
+        if not isinstance(other, type(self)): 
+            return NotImplemented
         return self.sample_id == other.sample_id
 
     def sort_snps(self):
@@ -233,14 +233,17 @@ class Sample(object):
 
 
 def get_data_dict(csv_reader):
-    section = None                          # Header is always the first section
-    sections = ["Statistics", "SNPs", "Data"] # These sections follow the header
+    # Header is always the first section
+    section = None
+
+    # These sections follow the header
+    sections = ["Statistics", "SNPs", "Data"]
 
     data = {s: [] for s in sections} # We will extract the data into this dict
 
     # Each section has different column headers. 
     # The headers for the current section are stored here
-    section_column_headers = [] 
+    section_column_headers = []
 
     for row in csv_reader:
 
@@ -274,11 +277,13 @@ def get_data_dict(csv_reader):
 
     return data
 
+
 def get_sample(sample_id, samples):
     """
     Find the sample object in a list of samples with a matching sample_id
     """
     return next((sample for sample in samples if sample.sample_id == sample_id), None)
+
 
 def get_snp(rsid, snps):
     """
@@ -323,7 +328,7 @@ def main(csv_filepath):
     samples = []
     snps = []
 
-    # These SNPs act as a template for the genotyped SNPs associated with each 
+    # These SNPs act as a template for the genotyped SNPs associated with each
     # Sample
     with open(target_snp_filepath) as tgt_snps_fh:
         for line in tgt_snps_fh:
