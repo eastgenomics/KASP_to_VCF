@@ -33,7 +33,9 @@ def main(genotyping_data_dir="/mnt/storage/samba/samba.ctrulab.uk/cytogenetics/k
 				# These are our unprocessed output files
 				print("Data awaiting processing")
 				assert len(kasp_data) == 1, "Error, multiple kasp data files detected"
-				command = "python3.4 /mnt/storage/projects/GEL_WGS_SNP_genotyping/bin/KASPcsv_2_GELvcf.py {kasp_data}".format(kasp_data=kasp_data[0])
+				project_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+				script_path = os.path.join(project_dir, "bin/KASPcsv_2_GELvcf.py")
+				command = "python3.4 {script_path} {kasp_data}".format(script_path=script_path, kasp_data=kasp_data[0])
 				print(command)
 				subprocess.call(command, shell=True)
 
