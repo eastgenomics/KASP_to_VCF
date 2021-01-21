@@ -19,17 +19,12 @@ import hashlib
 import urllib.request
 
 
-def QC():
-    # TO DO
-    return True
-
-
 class Vcf(object):
 
     def __init__(self, sample):
         self.fileformat = "VCFv4.2"
         self.sample     = sample
-        self.source     = "KASP_to_VCF_v1.0"
+        self.source     = "KASP_to_VCF_v1.0.2"
         self.reference  = "http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa"
         self.contigs    = self._get_SNP_contigs()
         self.filter     = ['ID=PASS,Description="All filters passed"']
